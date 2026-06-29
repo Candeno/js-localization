@@ -5,36 +5,35 @@ use JsLocalization\Console\RefreshCommand;
 
 class RefreshCommandTest extends TestCase
 {
-    public function tearDown(): void
-    {
-        m::close();
+	public function tearDown(): void
+	{
+		m::close();
 
-        parent::tearDown();
-    }
+		parent::tearDown();
+	}
 
-    public function testNoLocalesConfigException()
-    {
-        // Mock Config
-        Illuminate\Support\Facades\Config::swap($config = m::mock('ConfigMock'));
+	public function testNoLocalesConfigException()
+	{
+		// Mock Config
+		Illuminate\Support\Facades\Config::swap($config = m::mock('ConfigMock'));
 
-        $config->shouldReceive('get')->with('js-localization.locales')
-          ->andReturn(null);
+		$config->shouldReceive('get')->with('js-localization.locales')
+			->andReturn(null);
 
-        $this->expectException(Exception::class);
+		$this->expectException(Exception::class);
 
-        $this->runCommand();
-    }
+		$this->runCommand();
+	}
 
-    protected function runCommand()
-    {
-        $cmd = new RefreshCommand();
+	protected function runCommand()
+	{
+		$cmd = new RefreshCommand();
 
-        $cmd->setLaravel(app(\Illuminate\Contracts\Foundation\Application::class));
+		$cmd->setLaravel(app(Illuminate\Contracts\Foundation\Application::class));
 
-        $cmd->run(
-            new Symfony\Component\Console\Input\ArrayInput([]),
-            new Symfony\Component\Console\Output\NullOutput
-        );
-    }
-
+		$cmd->run(
+			new Symfony\Component\Console\Input\ArrayInput([]),
+			new Symfony\Component\Console\Output\NullOutput()
+		);
+	}
 }

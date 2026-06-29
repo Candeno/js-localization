@@ -5,71 +5,68 @@ use JsLocalization\Facades\MessageCachingService;
 
 class MessageCachingServiceTest extends TestCase
 {
+	public function setUp(): void
+	{
+		parent::setUp();
 
-    public function setUp(): void
-    {
-        parent::setUp();
+		Cache::forget(JsLocalization\Caching\MessageCachingService::CACHE_KEY);
+		Cache::forget(JsLocalization\Caching\MessageCachingService::CACHE_TIMESTAMP_KEY);
+	}
 
-        Cache::forget(JsLocalization\Caching\MessageCachingService::CACHE_KEY);
-        Cache::forget(JsLocalization\Caching\MessageCachingService::CACHE_TIMESTAMP_KEY);
-    }
+	public function tearDown(): void
+	{
+		m::close();
 
-    public function tearDown(): void
-    {
-        m::close();
+		parent::tearDown();
+	}
 
-        parent::tearDown();
-    }
+	public function testGetMessagesJson()
+	{
+		$this->assertMessagesJsonEquals($this->testMessagesFlat);
 
+		// Add another string, but without refreshing the cache:
 
-    public function testGetMessagesJson()
-    {
-        $this->assertMessagesJsonEquals($this->testMessagesFlat);
+		$originalTestMessages = $this->testMessagesFlat;
+		$this->addTestMessage('en', 'test.new_message', 'This is a new message.');
 
-        // Add another string, but without refreshing the cache:
+		$this->assertMessagesJsonEquals($originalTestMessages);
 
-        $originalTestMessages = $this->testMessagesFlat;
-        $this->addTestMessage('en','test.new_message', "This is a new message.");
+		// Now refresh the cache:
 
-        $this->assertMessagesJsonEquals($originalTestMessages);
+		MessageCachingService::refreshCache();
 
-        // Now refresh the cache:
+		$this->assertMessagesJsonEquals($this->testMessagesFlat);
+	}
 
-        MessageCachingService::refreshCache();
+	public function testGetLastRefreshTimestamp()
+	{
+		$timestamp = MessageCachingService::getLastRefreshTimestamp()->getTimestamp();
+		$this->assertEquals(0, $timestamp);
 
-        $this->assertMessagesJsonEquals($this->testMessagesFlat);
-    }
+		MessageCachingService::refreshCache();
+		$refreshTime = time();
 
-    public function testGetLastRefreshTimestamp()
-    {
-        $timestamp = MessageCachingService::getLastRefreshTimestamp()->getTimestamp();
-        $this->assertEquals(0, $timestamp);
+		$timestamp = MessageCachingService::getLastRefreshTimestamp()->getTimestamp();
+		$this->assertEquals($refreshTime, $timestamp);
+	}
 
-        MessageCachingService::refreshCache();
-        $refreshTime = time();
+	public function testRefreshMessageCacheEvent()
+	{
+		$this->addToAssertionCount(
+			m::getContainer()->mockery_getExpectationCount()
+		);
 
-        $timestamp = MessageCachingService::getLastRefreshTimestamp()->getTimestamp();
-        $this->assertEquals($refreshTime, $timestamp);
-    }
+		Event::shouldReceive('dispatch')->once()->with('JsLocalization.registerMessages');
 
-    public function testRefreshMessageCacheEvent()
-    {
-        $this->addToAssertionCount(
-            \Mockery::getContainer()->mockery_getExpectationCount()
-        );
+		MessageCachingService::refreshCache();
+	}
 
-        Event::shouldReceive('dispatch')->once()->with('JsLocalization.registerMessages');
+	private function assertMessagesJsonEquals(array $expectedMessages)
+	{
+		$messagesJson = MessageCachingService::getMessagesJson();
+		$this->assertJson($messagesJson);
 
-        MessageCachingService::refreshCache();
-    }
-
-    private function assertMessagesJsonEquals(array $expectedMessages)
-    {
-        $messagesJson = MessageCachingService::getMessagesJson();
-        $this->assertJson($messagesJson);
-
-        $messages = json_decode($messagesJson, true);
-        $this->assertEquals($expectedMessages, $messages);
-    }
-
+		$messages = json_decode($messagesJson, true);
+		$this->assertEquals($expectedMessages, $messages);
+	}
 }

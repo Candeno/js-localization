@@ -5,37 +5,38 @@ use JsLocalization\Http\Responses\StaticFileResponse;
 
 class StaticFileResponseTest extends TestCase
 {
-    protected $testFilePath;
-    protected $testFileContent;
+	protected $testFilePath;
 
-    public function setUp(): void
-    {
-        parent::setUp();
+	protected $testFileContent;
 
-        $this->testFilePath = "/tmp/laravel-static";
-        $this->testFileContent = "Test contents!";
+	public function setUp(): void
+	{
+		parent::setUp();
 
-        File::put($this->testFilePath, $this->testFileContent);
-    }
+		$this->testFilePath = '/tmp/laravel-static';
+		$this->testFileContent = 'Test contents!';
 
-    public function testServingFile()
-    {
-        $response = new StaticFileResponse($this->testFilePath);
+		File::put($this->testFilePath, $this->testFileContent);
+	}
 
-        $lastModified = new DateTime();
-        $lastModified->setTimestamp( File::lastModified($this->testFilePath) );
+	public function testServingFile()
+	{
+		$response = new StaticFileResponse($this->testFilePath);
 
-        $this->assertEquals($response->getStatusCode(), 200);
-        $this->assertEquals($response->getContent(), $this->testFileContent);
-        $this->assertEquals($response->getLastModified()->getTimestamp(), $lastModified->getTimestamp());
-    }
+		$lastModified = new DateTime();
+		$lastModified->setTimestamp(File::lastModified($this->testFilePath));
 
-    public function testExceptionHandling()
-    {
-        $filePath = "/tmp/x/y/z/does-not-exist";
+		$this->assertEquals($response->getStatusCode(), 200);
+		$this->assertEquals($response->getContent(), $this->testFileContent);
+		$this->assertEquals($response->getLastModified()->getTimestamp(), $lastModified->getTimestamp());
+	}
 
-        $this->expectException(Exception::class, "Cannot read file: $filePath");
+	public function testExceptionHandling()
+	{
+		$filePath = '/tmp/x/y/z/does-not-exist';
 
-        new StaticFileResponse($filePath);
-    }
+		$this->expectException(Exception::class, "Cannot read file: {$filePath}");
+
+		new StaticFileResponse($filePath);
+	}
 }
