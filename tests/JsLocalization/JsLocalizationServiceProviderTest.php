@@ -12,7 +12,6 @@ class JsLocalizationServiceProviderTest extends Orchestra\Testbench\TestCase
 
 	public function testProvidesArray()
 	{
-		$this->fail('STUB (red phase): the package does not install on Laravel 13');
 		$service = new JsLocalizationServiceProvider($this->app);
 
 		$this->assertEquals($service->provides(), ['js-localization']);
